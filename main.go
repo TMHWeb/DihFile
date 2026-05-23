@@ -10,16 +10,13 @@ import (
 )
 
 func main() {
-	// Railway needs the PORT variable
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	// Create uploads directory if it doesn't exist
 	os.MkdirAll("uploads", 0755)
 
-	// Homepage logic
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		fmt.Fprintf(w, `
@@ -27,7 +24,7 @@ func main() {
 		<h1>Game Host</h1>
 		<form action="/upload" method="post" enctype="multipart/form-data">
 			<input type="file" name="file" style="padding: 10px;">
-			<input type="submit" value="Upload Game" style="padding: 10px; cursor: pointer;">
+			<input type="submit" value="Upload" style="padding: 10px; cursor: pointer;">
 		</form>
 		<hr><h3>Available Files:</h3><ul>`)
 
@@ -39,7 +36,6 @@ func main() {
 		fmt.Fprintf(w, `</ul></body></html>`)
 	})
 
-	// Optimized Upload logic
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		if err != nil {
@@ -55,19 +51,17 @@ func main() {
 		}
 		defer out.Close()
 
-		// io.Copy is extremely fast; it streams the data directly to disk
 		_, err = io.Copy(out, file)
 		if err != nil {
-			http.Error(w, "Failed to save file", http.StatusInternalServerError)
+			http.Error(w, "failed to save file", http.StatusInternalServerError)
 			return
 		}
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
 
-	// File server
 	http.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
-	log.Println("Server running on port " + port)
+	log.Println("server running on port " + port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
